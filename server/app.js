@@ -1,14 +1,39 @@
 import express from "express";
 import userRoute from "./routes/user.js"
+import { connectDB } from "./utils/features.js";
+import dotenv from "dotenv";
+import { errorMiddleware } from "./middlewares/error.js";
+
+
+dotenv.config({
+    path:"./.env",
+});
+// connect with database/mongodb
+const mongoURI = process.env.MONGO_URL;
+const port = process.env.PORT || 3000 ;
+connectDB(mongoURI);
 
 const app = express();
 
+// using middleware here --
+app.use(express.json());  // json data access karne ke liye
+
+// app.use(express.urlencoded()); form data access karne ke liye
+// but agar form mai file bhi le rhe hai toh isse kaam nhi chalega
+// we have to use another middleware for accessing files => multer middleware
+
+// user routes
 app.use("/user" , userRoute);  
 
+// deafult route
 app.get("/", (req, res) => {
     res.send("this is the default route of out chatify application");
 })
 
-app.listen(3000, () => {
-    console.log("server is running on port 3000");
+// error middlware 
+app.use(errorMiddleware)
+
+// listen to port
+app.listen(port, () => {
+    console.log(`server is running at port: ${port}`);
 })
