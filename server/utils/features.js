@@ -21,6 +21,7 @@ const connectDB = (uri) => {
 
 // token ko cookie mai send karna hai
 const sendToken = (res , user , code , message) => {
+    // id ke basis pe jwt token ko verify karunga
     const token = jwt.sign({_id:user._id} , process.env.JWT_SECRET);
 
     return res.status(code).cookie("chatify-token",token,cookieOptions).json({
@@ -29,4 +30,4 @@ const sendToken = (res , user , code , message) => {
     })
 }
 
-export {connectDB , sendToken};
+export {connectDB , sendToken , cookieOptions};

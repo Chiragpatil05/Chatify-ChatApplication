@@ -1,6 +1,6 @@
 import { compare } from "bcrypt";
-import {User} from "../models/user.js";
-import { sendToken } from "../utils/features.js";
+import { User } from "../models/user.js";
+import { cookieOptions, sendToken } from "../utils/features.js";
 import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
 
@@ -53,4 +53,35 @@ const login = TryCatch(
     }
 )
 
-export {login , newUser}
+
+// ------ get my profile route ------
+// sabse phele user login hona chaiye , iske liye isAuthenticated middleware ka use karenge , ys middleware token ko verify kaerga , 
+const getMyProfile = TryCatch(
+    async (req , res) => {
+        const user = await User.findById(req.user);
+    
+        res.status(200).json({
+            success: true,
+            message:"check getmyprofile route",
+            user,
+        })
+    }
+)
+
+
+// ------ logout controller ----------
+// jab user login ya register hota hai toh uko token milta hai
+// logout ke time token ko clear kardenge ya cookie ko empty set kardenge
+const logout = TryCatch(
+    async (req , res) => {
+        return res.status(200)
+        .cookie("chatify-token","", {...cookieOptions , maxAge:0})
+        .json({
+            success:true,
+            message:"logged out successfully",
+        })
+    }
+)
+
+
+export {login , newUser , getMyProfile  , logout}

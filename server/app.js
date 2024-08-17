@@ -3,6 +3,7 @@ import userRoute from "./routes/user.js"
 import { connectDB } from "./utils/features.js";
 import dotenv from "dotenv";
 import { errorMiddleware } from "./middlewares/error.js";
+import cookieParser from "cookie-parser";
 
 
 dotenv.config({
@@ -17,6 +18,7 @@ const app = express();
 
 // using middleware here --
 app.use(express.json());  // json data access karne ke liye
+app.use(cookieParser());  // inorder to access cookie
 
 // app.use(express.urlencoded()); form data access karne ke liye
 // but agar form mai file bhi le rhe hai toh isse kaam nhi chalega
