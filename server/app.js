@@ -1,10 +1,12 @@
 import express from "express";
-import userRoute from "./routes/user.js"
 import { connectDB } from "./utils/features.js";
 import dotenv from "dotenv";
 import { errorMiddleware } from "./middlewares/error.js";
 import cookieParser from "cookie-parser";
 
+import userRoute from "./routes/user.js";
+import chatRoute from "./routes/chat.js";
+import { createUser } from "./seeders/user.js";
 
 dotenv.config({
     path:"./.env",
@@ -13,6 +15,9 @@ dotenv.config({
 const mongoURI = process.env.MONGO_URL;
 const port = process.env.PORT || 3000 ;
 connectDB(mongoURI);
+
+// here we will use the seeder , createUser() and sirf 1 baar use karenge taaki baar baar user nahi bante rahe
+// createUser(10);
 
 const app = express();
 
@@ -26,6 +31,10 @@ app.use(cookieParser());  // inorder to access cookie
 
 // user routes
 app.use("/user" , userRoute);  
+
+// chat routes
+app.use("/chat" , chatRoute);
+
 
 // deafult route
 app.get("/", (req, res) => {
