@@ -3,6 +3,7 @@ import { ErrorHandler } from "../utils/utility.js";
 import { Chat } from "../models/chat.js";
 import { emitEvent } from "../utils/features.js";
 import { ALERT, REFETCH_CHATS } from "../constants/events.js";
+import { getOtherMember } from "../lib/helper.js";
 
 // ---- new group chat controller ----
 // isme hum group ka name & members(ye user.id hogi) request ki body se fetch karlenge
@@ -35,4 +36,47 @@ const newGroupChat = TryCatch(
     }
 )
 
-export { newGroupChat }
+
+// ---- get my chats controller -----
+// apni chats (including group chats) laani hai jo left side mai dikti hai
+// apni chats kese find karenge => jis chat ke members[] mai mai hu(req.user) wo meri chats hai
+
+const getMyChats = TryCatch(
+    async(req , res , next) => {
+        // agar populate nahi kara toh members ki id aayegi , but we need members avatar as well as name
+        // agar members ko populate kara toh id ke jagah memeber ka actual document aayega (jo jo populate mai likha hoga i.e. name , avatar)
+        const chats = await Chat.find({ members: req.user })
+        .populate("members" , " name avatar")
+
+        const transformedChats = chats.map(( {_id , name , members , groupChat} ) => {
+            const otherMember = getOtherMember(members , req.user);
+
+            return{
+                _id,
+                groupChat,  
+
+                avatar: groupChat 
+                ? members.slice(0,3).map(({avatar}) => avatar.url)
+                : [otherMember.avatar.url] ,
+                
+                name: groupChat
+                ? name
+                : otherMember.name,
+
+                members: members.reduce((prev , curr) => {
+                    if(curr._id.toString() !== req.user.toString()){
+                        prev.push(curr._id);
+                    }
+                    return prev;
+                }, []),
+            }
+        })
+
+        return res.status(200).json({   
+            success: true,
+            chats: transformedChats,
+        })
+    }
+)
+
+export { newGroupChat, getMyChats }
