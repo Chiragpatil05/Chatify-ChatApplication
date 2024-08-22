@@ -90,6 +90,7 @@ const getMyGroups = TryCatch(
             groupChat: true,
             creator: req.user,
         }).populate("members" , "name avatar");
+        
 
         const groups = chats.map(({ members , _id , groupChat , name }) => (
             {
@@ -99,6 +100,7 @@ const getMyGroups = TryCatch(
                 avatar: members.slice(0,3).map(({avatar}) => avatar.url), 
             }
         ));
+
 
         return res.status(200).json({
             success:true,
