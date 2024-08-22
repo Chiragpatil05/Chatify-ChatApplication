@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.js";
-import { getMyChats, newGroupChat } from "../controllers/chat.js";
+import { getMyChats, getMyGroups, newGroupChat } from "../controllers/chat.js";
 
 const app = express.Router();
 
@@ -10,7 +10,12 @@ const app = express.Router();
 app.use(isAuthenticated);
 // meaning iske neeche jo bhi routes honge wo ese honge , so baar baar isAuthenticated nahi likhna padega =>  app.get("/me", isAuthenticated , getMyProfile);
 
+
 app.post("/new" , newGroupChat);
-app.get("/my" , getMyChats)
+app.get("/my" , getMyChats);
+app.get("/my/groups" , getMyGroups)
+
+
+
 
 export default app;
