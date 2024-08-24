@@ -5,7 +5,8 @@ import { isAuthenticated } from "../middlewares/auth.js";
 
 const app = express.Router();
 
-app.post("/new", singleAvatar , newUser)
+app.post("/new", singleAvatar , newUser);
+
 app.post("/login", login);
 
 
@@ -16,7 +17,9 @@ app.use(isAuthenticated);
 // meaning iske neeche jo bhi routes honge wo ese honge , so baar baar isAuthenticated nahi likhna padega =>  app.get("/me", isAuthenticated , getMyProfile);
 
 app.get("/me", getMyProfile);
+
 app.get("/logout" , logout);
+
 app.get("/search" , searchUser);
 
 export default app;
