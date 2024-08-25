@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.js";
-import { addMembers, getMyChats, getMyGroups, newGroupChat, removeMemeber } from "../controllers/chat.js";
+import { addMembers, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber } from "../controllers/chat.js";
 
 const app = express.Router();
 
@@ -20,6 +20,9 @@ app.get("/my/groups" , getMyGroups);
 app.put("/addmembers" , addMembers);
 
 app.put("/removemember" , removeMemeber);
+
+// (chat/:id) it is dynamic routing
+app.delete("/leave/:id" , leaveGroup);
 
 
 

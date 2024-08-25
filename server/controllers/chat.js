@@ -193,4 +193,47 @@ const removeMemeber = TryCatch(
 )
 
 
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber } 
+// ----------- leave group ------
+// chatId(id) ko params mese fetch karenge and chatfind karenge and simple chat memebers mai user(req.user) ko hata denge => filter kardenge matlab members mai kisi ki id req.user se match nhi kari chaiye 
+const leaveGroup = TryCatch(
+    async(req , res , next) => {
+        const chatId = req.params.id;
+
+        // find thr chat by chatId
+        const chat = await Chat.findById(chatId);
+
+        // no chat exists
+        if(!chat) return next(new ErrorHandler("Chat not found" , 404));
+
+        // agar chat groupChat nhi hai toh
+        if(!chat.groupChat) return next(new ErrorHandler("This is not a group chat" , 400));
+
+        const remainingMember = chat.members.filter((member) => member.toString() != req.user.toString());
+
+        if(remainingMember.length < 3) return next(new ErrorHandler("Group must have at least 3 members"));
+
+        // agar admin hi group leave kar do toh , is case mai hame naya admin assign karna padega group ko , naya admin randomly pick karenge
+        if(chat.creator.toString() == req.user.toString()){
+            const randomValue = Math.floor(Math.random() * remainingMember.length);
+            const newCreator = remainingMember[randomValue];
+            chat.creator = newCreator;
+        }
+
+        // khud ko remove kar do bs 
+        chat.members = remainingMember;
+
+        const [user] = await Promise.all([User.findById(req.user , "name") , chat.save()]);
+
+        emitEvent(req , ALERT , chat.members , `${user.name} has left the group`);
+
+        return res.status(200).json({
+            success: true,
+            message: `${user.name} has left the group`,
+        })
+
+
+
+    }
+)
+
+export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup } 
