@@ -88,15 +88,17 @@ const logout = TryCatch(
 // yaha query lagegi , now what is query => localhost:port/user/search?name=chirag  
 // ---?name=chirag(1 parameter) , ?name=chirag&age=20 (2 parameter)
 // so we can access the name by using query
-const searchUser = TryCatch(
-    async(req , res) => {
-        const {name} = req.query;
-        return res.status(200).json({
-            success:true,
-            message:name,
-        })
-    }
-)
+
+// -------- pending ----------
+// const searchUser = TryCatch(
+//     async(req , res) => {
+//         const {name} = req.query;
+//         return res.status(200).json({
+//             success:true,
+//             message:name,
+//         })
+//     }
+// )
 
 
 export {login , newUser , getMyProfile  , logout , searchUser}
