@@ -2,13 +2,15 @@ import multer from "multer";
 
 const multerUpload = multer({
     limits:{
-        fileSize: 1024 * 1024 * 5, // 5MB
+        fileSize: 1024 * 1024 * 5, // 5MB is the file limit
     }
 })
 
 const singleAvatar = multerUpload.single("avatar");
 
-export {singleAvatar};
+const attachmetsMulter = multerUpload.array("files",5);
+
+export {singleAvatar , attachmetsMulter};
 
 // there are two types of storage : memory(RAM) and disk
 // memory means RAM which is temporary and fast - it is deafult 

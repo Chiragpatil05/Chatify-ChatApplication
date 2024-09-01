@@ -101,4 +101,4 @@ const logout = TryCatch(
 // )
 
 
-export {login , newUser , getMyProfile  , logout , searchUser}
+export {login , newUser , getMyProfile  , logout}

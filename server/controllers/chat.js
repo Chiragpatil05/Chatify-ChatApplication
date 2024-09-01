@@ -2,9 +2,10 @@ import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
 import { Chat } from "../models/chat.js";
 import { emitEvent } from "../utils/features.js";
-import { ALERT, REFETCH_CHATS } from "../constants/events.js";
+import { ALERT, NEW_ATTACHMENT, NEW_MESSAGE_ALERT, REFETCH_CHATS } from "../constants/events.js";
 import { getOtherMember } from "../lib/helper.js";
 import { User } from "../models/user.js";
+import { Message } from "../models/message.js";
 
 // ---- new group chat  ----
 // isme hum group ka name & members(ye user.id hogi) request ki body se fetch karlenge
@@ -230,10 +231,67 @@ const leaveGroup = TryCatch(
             success: true,
             message: `${user.name} has left the group`,
         })
-
-
-
     }
 )
 
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup } 
+
+// --------- send attachement route -----------
+// text messgages we will handle using socket io
+// here we will send attachments , kis chat mai attachment send karna hai => fetch chatId
+const   sendAttachments = TryCatch(
+    async(req , res , next) => {
+        const { chatId } = req.body;
+
+        // find chat and user by the chatId => ek saath dhundna hai so we will use promise
+        // const chat = await Chat.findById(chatId);
+        // const me = await User.findById(req.user);
+        const [chat , me] = await Promise.all([
+            Chat.findById(chatId),
+            User.findById(req.user , "name"),
+        ])
+
+        if(!chat) return next(new ErrorHandler("Chat not found" , 404));
+
+        const files = req.files || [];
+
+        if(files.length < 1) return next(new ErrorHandler("Please provide attachment", 400));
+
+        // upload files here - here we will use cloudinary
+        const attachments = [];
+
+        // ye message database mai save hoga
+        const messageForDB = {
+            content: "",
+            attachments,
+            sender: me._id,
+            chat: chatId,
+        };
+
+        // messageForRealTime ye message socket mai bhejna hai ... (ui mai jo attachement wala part dikhta hai wo , isme we need user avatar)
+        const messageForRealTime = {
+            ...messageForDB , 
+            sender:{
+                _id:me._id,
+                name:me.name,
+            }
+        };
+
+        const message = await Message.create(messageForDB)
+
+        emitEvent(req , NEW_ATTACHMENT , chat.members , {
+            message: messageForRealTime , 
+            chatId
+        });
+
+        emitEvent(req , NEW_MESSAGE_ALERT , chat.members , {
+            chatId
+        });
+
+        return res.status(200).json({
+            success:true,
+            message,
+        })
+    }
+)
+
+export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments } 
