@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.js";
-import { addMembers, getChatDetails, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, sendAttachments } from "../controllers/chat.js";
+import { addMembers, getChatDetails, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, renameGroup, sendAttachments } from "../controllers/chat.js";
 import { attachmetsMulter } from "../middlewares/multer.js";
 
 const app = express.Router();
@@ -35,6 +35,6 @@ app.post("/message", attachmetsMulter , sendAttachments);
 //    2.   app.post("/chat/:id" , function2)
 //    3.   app.delete("/chat/:id" , function3)
 // agar ye 3 routes saath me likhenge it will look like 
-app.route("/:id").get(getChatDetails).post().delete();
+app.route("/:id").get(getChatDetails).put(renameGroup).delete();
 
 export default app;

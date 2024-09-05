@@ -336,4 +336,40 @@ const getChatDetails = TryCatch(
         }
     }
 )
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails} 
+
+
+// ------- rename group ----------
+const renameGroup = TryCatch(
+    async(req , res , next) => {
+        // jis bhi group/chat ka name change karna hai usko fetch karo from req.params.id
+        const chatId = req.params.id;
+        
+        // naya naam konsa rakhna hai => ye req.body se aayega
+        const {name} = req.body;
+
+        // find chat by chatId
+        const chat = await Chat.findById(chatId);
+
+        if(!chat) return next(new ErrorHandler("Chat not found" , 400));
+
+        if(!chat.groupChat) return next(new ErrorHandler("This is not a group chat" , 400));
+
+        // agar mai group ka creator nhi hu toh mai name nhi change kar sakta
+        if(chat.creator.toString() !== req.user.toString()) return next(new ErrorHandler("You are not allowed to rename the group"));
+
+        chat.name = name;
+
+        await chat.save();
+        console.log(`new group name = ${chat.name}`);
+        emitEvent(req , REFETCH_CHATS , chat.members);
+
+        return res.status(200).json({
+            success: true,
+            message:"Group name changed successfully",
+        })
+        
+    }
+)
+
+
+export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails, renameGroup} 
