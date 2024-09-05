@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.js";
-import { addMembers, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, sendAttachments } from "../controllers/chat.js";
+import { addMembers, getChatDetails, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, sendAttachments } from "../controllers/chat.js";
 import { attachmetsMulter } from "../middlewares/multer.js";
 
 const app = express.Router();
@@ -29,6 +29,12 @@ app.delete("/leave/:id" , leaveGroup);
 // this is send attachment route
 app.post("/message", attachmetsMulter , sendAttachments);
 
-
+// get chat details : rename , delete
+// here we will use "chaining" - route(path) ek hi hai but method are different
+//    1.   app.get("/chat/:id" , function1)
+//    2.   app.post("/chat/:id" , function2)
+//    3.   app.delete("/chat/:id" , function3)
+// agar ye 3 routes saath me likhenge it will look like 
+app.route("/:id").get(getChatDetails).post().delete();
 
 export default app;

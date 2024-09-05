@@ -294,4 +294,46 @@ const   sendAttachments = TryCatch(
     }
 )
 
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments } 
+// ----- get chat details --------
+// chatId ke basis par , chat ki details laai hai , chatId ko req.params.id se lenge
+const getChatDetails = TryCatch(
+    async (req, res , next) => {
+        if(req.query.populate === "true"){
+            console.log("populate...");
+
+            // populate karna padega bcos we need name and avatar of memeber
+            // what is lean => ye jo chat object hai it will be treated as javascript object , and not treated as mongoose object , so we can do changes in the chat object without changing / saving it into the database
+            const chat = await Chat.findById(req.params.id).populate(
+                "members",
+                "name avatar"
+            ).lean(); 
+            
+            if(!chat) return next(new ErrorHandler("Chat not found" , 400));
+
+            chat.members = chat.members.map(({_id , name , avatar}) => ({
+                _id,
+                name,
+                avatar: avatar.url,
+            }));
+
+            return res.status(200).json({
+                success: true,
+                chat,
+            })
+        }
+        else{
+            console.log("not populate");
+            // yaha populate nahi kar rhe bcos yha par sirf members ki id aayegi
+            const chat = await Chat.findById(req.params.id);
+
+            if(!chat) return next(new ErrorHandler("Chat not found" , 404));
+
+            return res.status(200).json({
+                success:true,
+                chat,
+            })
+
+        }
+    }
+)
+export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails} 
