@@ -1,7 +1,7 @@
 import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
 import { Chat } from "../models/chat.js";
-import { emitEvent } from "../utils/features.js";
+import { deleteFilesFromCloudinary, emitEvent } from "../utils/features.js";
 import { ALERT, NEW_ATTACHMENT, NEW_MESSAGE_ALERT, REFETCH_CHATS } from "../constants/events.js";
 import { getOtherMember } from "../lib/helper.js";
 import { User } from "../models/user.js";
@@ -372,4 +372,64 @@ const renameGroup = TryCatch(
 )
 
 
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails, renameGroup} 
+// ----------- delete chat --------
+// sab se phele jis bhi chat ko delete karna hai uski id se usko find karo
+// here we are not deleteing individual chat(1-1 chat) , but we are deleteing group chat
+// so here we are deleting group chat and group chat sirf admin(creator) hi delete kar skta hai
+// delete chat means ki saare messages delete karo
+// here we have to delete all messages as well as attachments or files from cloudinary
+const deleteChat = TryCatch(
+    async (req , res , next) => {
+        const chatId = req.params.id;
+
+        const chat = await Chat.findById(chatId);
+
+        if(!chat) return next(new ErrorHandler("Chat not found" , 400));
+
+        const members = chat.members;
+
+        // group chat toh hai par mai admin nahi hu
+        if(chat.groupChat && chat.creator.toString() != req.user.toString()) return next(new ErrorHandler("You are not allowed to delete the group" , 403));
+
+        // group chat nahi hai aur chat ke members mai me nhi hu
+        if(!chat.groupChat && !chat.members.include(req.user.toString())) return next(new ErrorHandler("You are not allowed to delete the group" , 403));
+
+        // here we have to delete all messages as well as attachments or files from cloudinary
+
+        // find messages with attachments , saare messages find karo using chatId and jis attachments exists karni chaiye usme and notwqualto(ne) empty array(attachments empty array nhi honi chaiye)
+        const messagesWithAttachments = await Message.find({
+            chat: chatId,
+            attachments: {
+                $exists: true,
+                $ne: []
+            },
+        });
+
+        // saaare messages ki public id lelo
+        const public_ids = [];
+
+        // ab messagesWithAttachments bhi ek array hoga , jisme bht saare attachments wale messages honge , and attachemets bhi ek array hai
+        messagesWithAttachments.forEach(({attachments}) => 
+            attachments.forEach(({public_id}) => public_ids.push(public_id)
+            )
+        );
+
+        await Promise.all([
+            // delete files from cloudinary
+            deleteFilesFromCloudinary(public_ids),
+            chat.deleteOne(),
+            Message.deleteMany({chat : chatId}),
+        ]);
+
+        emitEvent(req , REFETCH_CHATS , members);
+
+        return res.status(200).json({
+            success: true,
+            message:"Group chat deleted successfully",
+        })
+
+    }
+)
+
+
+export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails, renameGroup , deleteChat} 
