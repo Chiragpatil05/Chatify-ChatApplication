@@ -432,4 +432,51 @@ const deleteChat = TryCatch(
 )
 
 
-export { newGroupChat, getMyChats, getMyGroups, addMembers, removeMemeber, leaveGroup , sendAttachments , getChatDetails, renameGroup , deleteChat} 
+// --------- get messages -----
+// messages lene hai kisi bhi chat ke , so first we will fetch chat using chatId(params.id)
+// 1 page par (here page means scroll) 20 messages ki limit hai , it means ki agar scroll karte hai toh we will go to page 2 and can see next 20 messages and we have skipped first 20 messages
+const getMessages = TryCatch(
+    async (req , res , next) => {
+        const chatId = req.params.id;
+        
+        const { page = 1 } = req.query;
+
+        // 1 page par kitne messages show karne hai
+        const resultPerPage = 20;
+
+        // kisi bhi page par jaane ki liye kitne messages skip karne padenge
+        const skip = (page - 1) * resultPerPage;
+
+        const [messages , totalMesaagesCount] = await Promise.all([
+            Message.find({chat:chatId})
+            .sort({createdAt: -1})
+            .skip(skip)
+            .limit(resultPerPage)
+            .populate("sender" , "name")
+            .lean() 
+            ,
+            Message.countDocuments({chat: chatId})
+        ]);
+
+        const totalPages = Math.ceil(totalMesaagesCount / resultPerPage) || 0;
+
+        return res.status(200).json({
+            success: true,
+            message: messages.reverse() , totalPages,
+        })
+    }
+)
+
+export { 
+    newGroupChat, 
+    getMyChats, 
+    getMyGroups, 
+    addMembers, 
+    removeMemeber, 
+    leaveGroup , 
+    sendAttachments , 
+    getChatDetails, 
+    renameGroup , 
+    deleteChat, 
+    getMessages
+} 

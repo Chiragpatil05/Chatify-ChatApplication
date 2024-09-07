@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 import userRoute from "./routes/user.js";
 import chatRoute from "./routes/chat.js";
 import { createUser } from "./seeders/user.js";
+import { createSingleChats , createGroupChats, createMessageInAChat } from "./seeders/chat.js";
+
 
 dotenv.config({
     path:"./.env",
@@ -16,9 +18,14 @@ const mongoURI = process.env.MONGO_URL;
 const port = process.env.PORT || 3000 ;
 connectDB(mongoURI);
 
+// ----- seeders -----
 // here we will use the seeder , createUser() and sirf 1 baar use karenge taaki baar baar user nahi bante rahe
 // createUser(10);
 
+// createSingleChats(10);
+// createGroupChats(10);
+
+// createMessageInAChat("66c756ca5bdf634c3acfec34" , 50);
 const app = express();
 
 // using middleware here --

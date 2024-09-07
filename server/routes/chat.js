@@ -1,6 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.js";
-import { addMembers, deleteChat, getChatDetails, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, renameGroup, sendAttachments } from "../controllers/chat.js";
+import { addMembers, deleteChat, getChatDetails, getMessages, getMyChats, getMyGroups, leaveGroup, newGroupChat, removeMemeber, renameGroup, sendAttachments } from "../controllers/chat.js";
 import { attachmetsMulter } from "../middlewares/multer.js";
 
 const app = express.Router();
@@ -28,6 +28,9 @@ app.delete("/leave/:id" , leaveGroup);
 // normal message send karna text we will handle it using socket
 // this is send attachment route
 app.post("/message", attachmetsMulter , sendAttachments);
+
+// get messages
+app.get("/message/:id" , getMessages);
 
 // get chat details : rename , delete
 // here we will use "chaining" - route(path) ek hi hai but method are different
