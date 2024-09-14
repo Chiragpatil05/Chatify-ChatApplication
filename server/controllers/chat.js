@@ -14,9 +14,11 @@ import { Message } from "../models/message.js";
 
 const newGroupChat = TryCatch(
     async(req , res , next) => {
+        // name of chat kya hai aur usme konse konse members ko add karna hai
         const { name , members } = req.body;
 
-        if(members.length < 2) return next(new ErrorHandler("Group chat must have at least 3 memebers" , 400));
+        // ------- we have done this by using validators ... 
+        // if(members.length < 2) return next(new ErrorHandler("Group chat must have at least 3 memebers" , 400));
 
         // ...members : jo member aaye hai & req.user ye khud apn hai(creator hum khud hai)
         const allMembers = [...members , req.user]; 
@@ -118,7 +120,8 @@ const addMembers = TryCatch(
     async(req , res , next) => {
         const {chatId , members} = req.body;
 
-        if(!members || members.length < 1) return next(new ErrorHandler("Please provide members" , 400));
+        // we have handle this using validators
+        // if(!members || members.length < 1) return next(new ErrorHandler("Please provide members" , 400));
 
         // find the chat on the basis of chatId
         const chat = await Chat.findById(chatId);
