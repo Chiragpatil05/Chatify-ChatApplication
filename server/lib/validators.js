@@ -37,8 +37,6 @@ const removeMemeberValidator = () => [
     body("userId" , "Please Enter User ID").notEmpty(),
 ];
 
-
-
 const sendAttachmentValidator = () => [
     body("chatId" , "Please Enter Chat ID").notEmpty(),
     check("files").notEmpty().withMessage("Please Uplaod Attachments").isArray({min:1 , max:5})

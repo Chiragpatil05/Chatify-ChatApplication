@@ -1,5 +1,6 @@
 import { compare } from "bcrypt";
 import { User } from "../models/user.js";
+import { Chat } from "../models/chat.js"
 import { cookieOptions, sendToken } from "../utils/features.js";
 import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
@@ -88,17 +89,54 @@ const logout = TryCatch(
 // yaha query lagegi , now what is query => localhost:port/user/search?name=chirag  
 // ---?name=chirag(1 parameter) , ?name=chirag&age=20 (2 parameter)
 // so we can access the name by using query
+// mujhse wo user search karne hai jo mere friends nhi hai
+const searchUser = TryCatch(
+    async(req , res) => {
+        const { name = "" } = req.query;
 
-// -------- pending ----------
-// const searchUser = TryCatch(
-//     async(req , res) => {
-//         const {name} = req.query;
-//         return res.status(200).json({
-//             success:true,
-//             message:name,
-//         })
-//     }
-// )
+        // apni saari chats find karo => jo group chat na ho and chat ke members me  mai hu
+        const myChats = await Chat.find({ groupChat: false , members: req.user});
+
+        /*
+            ab apni chat mai(myChats) , khud ko chhod ke (req.user) baaki members apni chat mai honge
+            isse khud ko chhod ke baaki saari members ki id mil jayegi
+            all users from my chat means : friends or people i have chatted with
+            const allUsersFromMyChats = myChats.map((chat) => chat.members).flat(); OR
+            flat karne se saare members ki id ek array mai aajayegi
+        */
+        const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
+
+        // ab jo user apn ko search karne hai wo apni chat mese koi nahi hona chaiye
+        // wo saari id jo , par  allUsersFromMyChats iko chhod kar
+        const allUsersExceptMeAndFriends = await User.find({
+            _id:{ $nin: allUsersFromMyChats} , 
+
+            // ab frontend mai jese koi name type kara wese user search hona chaiye
+            // so here we will use "regex"
+            // regex is a mongodb operator , which is used to find pattern in the given entity , here i means case insensitive
+            name: { $regex: name , $options: "i" },
+        });
+
+        const users = allUsersExceptMeAndFriends.map(({_id , name , avatar}) => (
+            { 
+                _id,
+                name,
+                avatar : avatar.url,
+            }
+        ));
+
+        return res.status(200).json({
+            success:true,
+            users,
+        })
+    }
+)
 
 
-export {login , newUser , getMyProfile  , logout}
+export {
+    login , 
+    newUser , 
+    getMyProfile , 
+    logout,
+    searchUser
+}
