@@ -1,9 +1,11 @@
 import { compare } from "bcrypt";
 import { User } from "../models/user.js";
 import { Chat } from "../models/chat.js"
-import { cookieOptions, sendToken } from "../utils/features.js";
+import { Request } from "../models/request.js";
+import { cookieOptions, emitEvent, sendToken } from "../utils/features.js";
 import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
+import { NEW_REQUEST } from "../constants/events.js"
 
 
 // ----- new user controller -------
@@ -133,10 +135,46 @@ const searchUser = TryCatch(
 )
 
 
+// ----------- send request controller -------
+const sendFriendRequest = TryCatch(
+    async(req , res , next) => {
+        // kis user ko request bhejni hai
+        const { userId } = req.body;
+
+        // check karenge ki request already exist karti hai ki nhi
+        // agar phele se request send kari hui hai toh , db mai request ke isme sender ya receiver mil jayenge
+        const request = await Request.findOne({
+            $or:[
+                { sender : req.user , receiver : userId},
+                { sender : userId , receiver : req.user},
+            ]
+        });
+
+        // agar request already exist karti hai , throw error
+        if(request) return next(new ErrorHandler("Request already sent" , 400));
+
+        // agar request exist nhi karti , create new request
+        await Request.create({
+            sender: req.user,
+            receiver: userId,
+        })
+
+        emitEvent(req , NEW_REQUEST , [userId]);
+
+        return res.status(200).json({
+            success: true,
+            message: "Friend request send successfully"
+        })
+
+    }
+)
+
+
 export {
     login , 
     newUser , 
     getMyProfile , 
     logout,
-    searchUser
+    searchUser,
+    sendFriendRequest
 }

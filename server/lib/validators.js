@@ -52,6 +52,10 @@ const renameGroupValidator = () => [
     body("name" , "Please Enter Group New Name").notEmpty(),
 ];
 
+const sendRequestValidator = () => [
+    body("userId" , "Please Enter User ID").notEmpty(),
+]
+
 export {
     registerValidator,
     validateHandler,
@@ -61,5 +65,6 @@ export {
     removeMemeberValidator,
     sendAttachmentValidator,
     chatIdValidator,
-    renameGroupValidator
+    renameGroupValidator,
+    sendRequestValidator
 }
