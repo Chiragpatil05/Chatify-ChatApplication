@@ -178,7 +178,7 @@ const acceptFriendRequest = TryCatch(
         const { requestId , accept } = req.body;
 
         // find karo requestId ko in Request schema 
-        const request = await Request.findOne(requestId)
+        const request = await Request.findById(requestId)
         .populate("sender" , "name")
         .populate("receiver" , "name");
 
@@ -186,7 +186,7 @@ const acceptFriendRequest = TryCatch(
         if(!request) next(new ErrorHandler("Request not found" , 400));
 
         // receiver hi request accept karega matlab ki me request accept karunga
-        if(request.receiver.toString() !== req.user.toString()) return next(new ErrorHandler("You are not authorized to accept this request" , 400));
+        if(request.receiver._id.toString() !== req.user.toString()) return next(new ErrorHandler("You are not authorized to accept this request" , 400));
 
         // agar reciever ne request accept nahi ki toh delete request
         if(!accept){
