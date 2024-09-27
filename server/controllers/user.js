@@ -5,7 +5,7 @@ import { Request } from "../models/request.js";
 import { cookieOptions, emitEvent, sendToken } from "../utils/features.js";
 import { TryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
-import { NEW_REQUEST } from "../constants/events.js"
+import { NEW_REQUEST, REFETCH_CHATS } from "../constants/events.js"
 
 
 // ----- new user controller -------
@@ -170,11 +170,90 @@ const sendFriendRequest = TryCatch(
 )
 
 
+// ------------ accept request controller  -----
+const acceptFriendRequest = TryCatch(
+    async(req , res , next) => { 
+
+        // konsi request ko accpet karna hai ye pata padega => request id se and receiver hi request accept karega
+        const { requestId , accept } = req.body;
+
+        // find karo requestId ko in Request schema 
+        const request = await Request.findOne(requestId)
+        .populate("sender" , "name")
+        .populate("receiver" , "name");
+
+        // agar koi request nhi mili toh throw error
+        if(!request) next(new ErrorHandler("Request not found" , 400));
+
+        // receiver hi request accept karega matlab ki me request accept karunga
+        if(request.receiver.toString() !== req.user.toString()) return next(new ErrorHandler("You are not authorized to accept this request" , 400));
+
+        // agar reciever ne request accept nahi ki toh delete request
+        if(!accept){
+            await request.deleteOne();
+            return res.status(200).json({
+                success: true,
+                message: "Friend request rejected"
+            })
+        };
+
+        // agar request accept karli hai toh new chat hogi
+        const members = [request.sender._id , request.receiver._id];
+
+        // ab request accept hogai toh create a chat
+        await Promise.all([
+            Chat.create({
+                members,
+                name: `${request.sender.name}-${request.receiver.name}`
+            }),
+            request.deleteOne()
+        ])
+
+        emitEvent(req , REFETCH_CHATS , members);
+
+        return res.status(200).json({
+            success: true,
+            message: "Friend Request Accepted",
+            senderId: request.sender._id,
+        });
+    }
+)
+
+
+// ------------ get notification ------------
+const getMyNotifications = TryCatch(
+    async(req , res , next) => {
+        // mujhe jo jo request aai wo show karni hai
+        const requests = await Request.find({ receiver : req.user }).populate(
+            "sender",
+            "name avatar"
+        );
+
+        const allRequests = requests.map(({_id , sender}) => ({
+            _id,
+            sender:{
+                _id: sender._id,
+                name: sender.name,
+                avatar: sender.avatar.url,
+            }
+        }));
+
+        return res.status(200).json({
+            success: true,
+            allRequests,
+        })
+
+
+    }
+)
+
 export {
     login , 
     newUser , 
     getMyProfile , 
     logout,
     searchUser,
-    sendFriendRequest
+    sendFriendRequest,
+    acceptFriendRequest,
+    getMyNotifications
 }
