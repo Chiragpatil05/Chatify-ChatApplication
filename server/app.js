@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 
 import userRoute from "./routes/user.js";
 import chatRoute from "./routes/chat.js";
+import adminRoute from "./routes/admin.js"
+
 import { createUser } from "./seeders/user.js";
 import { createSingleChats , createGroupChats, createMessageInAChat } from "./seeders/chat.js";
 
@@ -41,6 +43,9 @@ app.use("/user" , userRoute);
 
 // chat routes
 app.use("/chat" , chatRoute);
+
+// admin routes
+app.use("/admin" , adminRoute); 
 
 
 // deafult route
